@@ -8,7 +8,7 @@ class Company(models.Model):
     location = models.CharField(max_length=100,null=True,blank=True)
     desc = models.TextField(null=True,blank=True)
     logo = models.ImageField(upload_to='company/logo/',null=True,blank=True)
-    email = models.EmailField(null=True,blank=True)
+    email = models.EmailField()
     website = models.URLField(null=True,blank=True)
     facebook_page = models.URLField(null=True,blank=True)
     linkedin = models.URLField(null=True,blank=True)
