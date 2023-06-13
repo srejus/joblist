@@ -24,4 +24,4 @@ class Job(models.Model):
         ('open','OPEN'),
         ('closed','CLOSED')
     )
-    job_status = models.CharField(max_length=50,choices=JOB_TYPE_CHOICES,default='open')
+    job_status = models.CharField(max_length=50,choices=JOB_STATUS_CHOICES,default='open')
