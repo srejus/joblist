@@ -3,8 +3,8 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.parsers import  JSONParser
-from rest_framework.permissions import AllowAny
+from rest_framework.parsers import  JSONParser,MultiPartParser,FormParser
+from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework.pagination import LimitOffsetPagination
 
 from job.models import *
@@ -73,3 +73,33 @@ class JobView(APIView):
         
         instance.delete()
         return Response({"status":"success","message":"Job deleted successfully"},status=status.HTTP_200_OK)
+    
+
+class JobApplicationView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser,FormParser]
+    pagination_class = LimitOffsetPagination
+    
+    def get(self,request,id=None):
+        queryset = JobApplication.objects.filter(applied_by=request.user).order_by('-id')
+        if id:
+            queryset = queryset.filter(id=id)
+            if not queryset.exists():
+                return Response({"status":"failed","message":"No Job Application found for the given id"},status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = JobApplicationSerializer(instance=queryset.first(),many=False)
+            return Response({"status":"success","message":"Data fetched successfully","data":serializer.data},status=status.HTTP_200_OK)
+        
+        paginator = self.pagination_class()
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = JobApplicationSerializer(instance=paginated_queryset, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+
+    def post(self,request):
+        request.data._mutable = True
+        request.data['applied_by'] = request.user.id
+        serializer = CreateJobApplicationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()        
+        return Response({"status":"success","message":"Data saved successfully"},status=status.HTTP_200_OK)

@@ -42,5 +42,36 @@ class JobSerializer(serializers.ModelSerializer):
     class Meta:
         model = Job
         fields = '__all__'
-        depth=1
+        depth = 1
     
+
+class JobApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobApplication
+        fields = '__all__'
+        depth = 1
+
+
+class CreateJobApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobApplication
+        exclude = ['applied_time','job']
+    
+    def validate(self,data):
+        errors = []
+        job = self.initial_data.get('job')
+        if not job:
+            errors.append({"job":"This field is required"})
+            
+        if job and not job.isnumeric():
+            errors.append({"job":"Invalid job"})
+        
+        job_obj = Job.objects.filter(id=job,job_status='open')
+        if not errors and not job_obj.exists():
+            errors.append({"job":"No job found with the given id"})
+        
+        if errors:
+            raise serializers.ValidationError({"errors":errors})
+        
+        data['job'] = job_obj.first()
+        return data

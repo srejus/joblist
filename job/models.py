@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import FileExtensionValidator
 
 from accounts.models import Company,Account
 
@@ -25,3 +26,12 @@ class Job(models.Model):
         ('closed','CLOSED')
     )
     job_status = models.CharField(max_length=50,choices=JOB_STATUS_CHOICES,default='open')
+    
+
+class JobApplication(models.Model):
+    job = models.ForeignKey(Job,on_delete=models.CASCADE,related_name='applied_for')
+    applied_by = models.ForeignKey(Account,on_delete=models.CASCADE,related_name='applied_by')
+    applied_time = models.DateTimeField(auto_now_add=True)
+    resume = models.FileField(upload_to='job/resume/',
+                              validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx'])],
+                              null=True,blank=True)
